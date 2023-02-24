@@ -22,10 +22,11 @@ export default {
     }
   },
   mounted () {
-    this.nfc = new NFCManager()
+
   },
   methods: {
     readNFC() {
+      this.nfc = new NFCManager()
       this.nfc.readNFCData(this.onnfcdataread)
     },
     onnfcdataread (event) {
