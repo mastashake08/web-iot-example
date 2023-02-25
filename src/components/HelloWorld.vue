@@ -5,15 +5,17 @@
       {{nfcData}}
     </p>
     <p>
-      {{btDevices}}
+      Your device battery level = {{btDevice}}
     </p>
-    <button :click="readNFC">Read NFC Data</button>
-    <button :click="getDevices">Scan BT Devices</button>
+    <button @click="readNFC">Read NFC Data</button>
+    <button @click="getDevices">Scan BT Devices</button>
+    <button @click="getPorts">Scan Serial Ports</button>
+    <button @click="getUSBDevices">Scan USB Devices</button>
   </div>
 </template>
 
 <script>
-import { NFCManager, BluetoothManager } from '@mastashake08/web-iot'
+import { NFCManager, BluetoothManager, SerialManager, USBManager } from '@mastashake08/web-iot'
 export default {
   name: 'HelloWorld',
   props: {
@@ -24,13 +26,28 @@ export default {
       nfc: null,
       nfcData: null,
       bt: null,
-      btDevices: null
+      btDevice: null,
+      serial: {},
+      usb: {}
     }
   },
   mounted () {
 
   },
   methods: {
+    async getUSBDevices () {
+      const filters = {
+        filters: [
+        
+      ]}
+      this.usb = new USBManager()
+      //console.log("Devices::",await this.usb.getDevices())
+      console.log("Devices::",await this.usb.requestDevice(filters))
+    },
+    async getPorts () {
+      this.serial = new SerialManager()
+      console.log(await this.serial.getPorts())
+    },
     readNFC() {
       this.nfc = new NFCManager()
       this.nfc.readNFCData(this.onnfcdataread)
@@ -38,9 +55,29 @@ export default {
     onnfcdataread (event) {
       this.nfcData = event
     },
-    getDevices () {
-      this.bt = new BluetoothManager()
-      this.btDevices = this.bt.getDevices()
+    async getDevices () {
+      try {
+        this.bt = new BluetoothManager()
+        this.btDevice = await this.bt.getDevices({
+          acceptAllDevices: true,
+          // filters: [{
+          //   services: ['0000180f-0000-1000-8000-00805f9b34fb'],
+          // }],
+          optionalServices: ["0000180f-0000-1000-8000-00805f9b34fb"]
+        })
+        await this.bt.connectToServer()
+        console.log(this.bt)
+        console.log('SERVICES', await this.bt.getServices())
+        await this.bt.getService('0000180f-0000-1000-8000-00805f9b34fb')
+
+        console.log('SERVICES::',await this.bt.getCharacteristic('00002a19-0000-1000-8000-00805f9b34fb'))
+
+        const val = await this.bt.getValue()
+
+        console.log(`Battery percentage is ${val.getUint8(0)}`);
+      } catch(e) {
+        console.log(e.message)
+      }
     }
   }
 }
