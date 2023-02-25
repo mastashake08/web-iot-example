@@ -4,12 +4,16 @@
     <p>
       {{nfcData}}
     </p>
+    <p>
+      {{btDevices}}
+    </p>
     <button :click="readNFC">Read NFC Data</button>
+    <button :click="getDevices">Scan BT Devices</button>
   </div>
 </template>
 
 <script>
-import { NFCManager } from '@mastashake08/web-iot'
+import { NFCManager, BluetoothManager } from '@mastashake08/web-iot'
 export default {
   name: 'HelloWorld',
   props: {
@@ -18,7 +22,9 @@ export default {
   data () {
     return {
       nfc: null,
-      nfcData: null
+      nfcData: null,
+      bt: null,
+      btDevices: null
     }
   },
   mounted () {
@@ -31,6 +37,10 @@ export default {
     },
     onnfcdataread (event) {
       this.nfcData = event
+    },
+    getDevices () {
+      this.bt = new BluetoothManager()
+      this.btDevices = this.bt.getDevices()
     }
   }
 }

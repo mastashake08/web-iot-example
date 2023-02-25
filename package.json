@@ -10,7 +10,7 @@
   "dependencies": {
     "core-js": "^3.8.3",
     "vue": "^2.6.14",
-    "@mastashake08/web-iot": "file:~/Programs/web-iot/mastashake08-web-iot-1.0.1.tgz"
+    "@mastashake08/web-iot": "file:~/Programs/web-iot/mastashake08-web-iot-1.0.3.tgz"
   },
   "devDependencies": {
     "@babel/core": "^7.12.16",
