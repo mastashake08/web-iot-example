@@ -38,7 +38,8 @@ export default {
     async getUSBDevices () {
       const filters = {
         filters: [
-        
+        { vendorId: '0x0781', productId: '0x5575' },
+        { vendorId: '0x2109'}
       ]}
       this.usb = new USBManager()
       //console.log("Devices::",await this.usb.getDevices())
