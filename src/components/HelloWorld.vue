@@ -42,12 +42,14 @@ export default {
         { vendorId: '0x2109'}
       ]}
       this.usb = new USBManager()
-      //console.log("Devices::",await this.usb.getDevices())
       console.log("Devices::",await this.usb.requestDevice(filters))
     },
     async getPorts () {
       this.serial = new SerialManager()
-      console.log(await this.serial.getPorts())
+      console.log(await this.serial.requestPort())
+      console.log(await this.serial.openPort({
+        baudRate: 22000
+      }))
     },
     readNFC() {
       this.nfc = new NFCManager()
