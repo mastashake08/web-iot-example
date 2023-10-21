@@ -12,6 +12,7 @@
       Your device battery level = {{battery_level}}%
 
     </p>
+    <canvas id="compass" height="300" width="300"></canvas>
     
     <button @click="readNFC">Read NFC Data</button>
     <button @click="getDevices">Scan BT Devices</button>
@@ -36,11 +37,46 @@ export default {
       serial: {},
       usb: {},
       battery_level: 0,
-      ad: {}
+      ad: {},
+      canvas: {},
+      ctx: {},
+      deltas : [[{
+          distance: 0,
+          timestamp: Date.now()
+        },{
+          distance: 0,
+          timestamp: Date.now()
+        }],[{
+          distance: 0,
+          timestamp: Date.now()
+        },{
+          distance: 0,
+          timestamp: Date.now()
+        }]],
+        point: {},
+        pointSize: 4
     }
   },
   mounted () {
+    this.canvas = document.getElementById("compass");
+    this.ctx = this.canvas.getContext("2d");
 
+    this.ctx.globalCompositeOperation = 'destination-over'
+    const radius = 50;
+    const center_x = 150;
+    const center_y = 150;
+     this.x = center_x + radius * Math.cos(0);
+    this.y = center_y + radius * Math.sin(0);
+    this.ctx.beginPath()
+    this.ctx.fill();
+    this.ctx.arc(150, 150, 50, 0, 2 * Math.PI);
+
+    
+    this.point = this.ctx.arc(this.x, this.y, this.pointSize, 0,  2 * Math.PI);
+    this.ctx.save()
+    //this.ctx.fill()
+    
+    this.ctx.stroke();
   },
   methods: {
     async getUSBDevices () {
@@ -68,6 +104,7 @@ export default {
         this.bt = new BluetoothManager()
         this.btDevice = await this.bt.getDevices({
           acceptAllDevices: true,
+          acceptAllAdvertisements: true
           //  filters: [{
           //    services: ["00002a00-0000-1000-8000-00805f9b34fb", "00002a19-0000-1000-8000-00805f9b34fb"],
           //    name: 'Services',
@@ -90,6 +127,11 @@ export default {
     },
      startNotifications () {
       this.bt.device.onadvertisementreceived = (event) => {
+        this.ctx.clearRect(0,0,300,300)
+        const font_size = "20px";
+        const radius = 50;
+        const center_x = 150;
+        const center_y = 150;
         this.ad = event
         console.log(event)
         console.log('Advertisement received.');
@@ -98,6 +140,46 @@ export default {
         console.log('  RSSI: ' + event.rssi);
         console.log('  TX Power: ' + event.txPower);
         console.log('  UUIDs: ' + event.uuids);
+        
+        this.deltas[0][0] = this.deltas[0][1]
+        this.deltas[0][1] = this.deltas[1][0]
+        this.deltas[1][0] = this.deltas[1][1]
+        
+        
+        const dist = 10**((event.txPower - event.rssi)/10**4)
+        console.log(dist)
+        const packet = {
+          distance: dist,
+          timestamp: event.timeStamp
+        }
+        this.deltas[1][1] = packet
+        console.log(this.deltas[1][1])
+        const x1 = this.deltas[0][0].distance
+        const x2 = this.deltas[0][1].distance
+        const y1 = this.deltas[1][0].distance
+        const y2 = this.deltas[1][1].distance
+        const a0 = this.deltas[0][0].timestamp - this.deltas[0][1].timestamp
+        const a1 = this.deltas[1][0].timestamp - this.deltas[1][1].timestamp
+        const vX = (x2-x1)/(a0)
+        const vY = (y2-y1)/(a1)
+        const angle = Math.atan(vY/vX)
+        
+        this.x = center_x + radius * Math.cos(-angle);
+        this.y = center_y + radius * Math.sin(-angle);
+        this.ctx.beginPath()
+        this.ctx.arc(this.x, this.y, this.pointSize, 0,  2 * Math.PI);
+          //this.ctx.moveTo(this.x, this.y);
+        this.ctx.arc(150, 150, 50, 0, 2 * Math.PI);
+
+
+//this.ctx.fill()
+   
+        console.log('ctx',this.ctx)
+        this.ctx.font = font_size;
+        this.ctx.fillText(`${event.device.name} - ${dist.toFixed(0)} meters away`,this.x + 10,this.y);
+
+        this.ctx.stroke()
+        this.ctx.restore()
         event.manufacturerData.forEach((valueDataView, key) => {
           console.log('Manufacturer', [key, valueDataView]);
         });
