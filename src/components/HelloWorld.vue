@@ -5,7 +5,12 @@
       {{nfcData}}
     </p>
     <p>
-      Your device battery level = {{btDevice}}
+      Your are connected to {{ (typeof bt.device !== 'undefined' && typeof bt.device.name !== 'undefined') ? bt.device.name  : 'NOT CONNECTED'   }}
+    </p>
+    <p>
+
+      Your device battery level = {{battery_level}}%
+
     </p>
     <button @click="readNFC">Read NFC Data</button>
     <button @click="getDevices">Scan BT Devices</button>
@@ -25,10 +30,11 @@ export default {
     return {
       nfc: null,
       nfcData: null,
-      bt: null,
+      bt: {},
       btDevice: null,
       serial: {},
-      usb: {}
+      usb: {},
+      battery_level: 0
     }
   },
   mounted () {
@@ -38,8 +44,7 @@ export default {
     async getUSBDevices () {
       const filters = {
         filters: [
-        { vendorId: '0x0781', productId: '0x5575' },
-        { vendorId: '0x2109'}
+        { services: ["heart_rate", "battery_level"] }
       ]}
       this.usb = new USBManager()
       console.log("Devices::",await this.usb.requestDevice(filters))
@@ -68,7 +73,14 @@ export default {
           // }],
           optionalServices: ["0000180f-0000-1000-8000-00805f9b34fb"]
         })
-        await this.bt.connectToServer()
+
+      await this.bt.connectToServer()
+       await this.getBatteryLevel()
+      } catch(e) {
+        console.log(e.message)
+      }
+    },
+    async getBatteryLevel() {
         console.log(this.bt)
         console.log('SERVICES', await this.bt.getServices())
         await this.bt.getService('0000180f-0000-1000-8000-00805f9b34fb')
@@ -78,11 +90,19 @@ export default {
         const val = await this.bt.getValue()
 
         console.log(`Battery percentage is ${val.getUint8(0)}`);
-      } catch(e) {
-        console.log(e.message)
+        this.battery_level = val.getUint8(0)
+    }
+  },
+  computed: {
+    getDeviceName () {
+      console.log('device' in this.bt)
+      if(this.bt.device) {
+        return this.bt.device.name
+      } else {
+        return 'DEVICE NOT CONNECTED'
       }
     }
-  }
+}
 }
 </script>
 
