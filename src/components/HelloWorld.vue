@@ -12,6 +12,7 @@
       Your device battery level = {{battery_level}}%
 
     </p>
+    
     <button @click="readNFC">Read NFC Data</button>
     <button @click="getDevices">Scan BT Devices</button>
     <button @click="getPorts">Scan Serial Ports</button>
@@ -34,7 +35,8 @@ export default {
       btDevice: null,
       serial: {},
       usb: {},
-      battery_level: 0
+      battery_level: 0,
+      ad: {}
     }
   },
   mounted () {
@@ -75,13 +77,20 @@ export default {
         })
 
       await this.bt.connectToServer()
+      this.startNotifications()
+      try {
+
       await this.getBatteryLevel()
+      } catch {
+        console.log('Error')
+      }
       } catch(e) {
         console.log(e.message)
       }
     },
-    async getBatteryLevel() {
-       this.bt.device.onadvertisementreceived = (event) => {
+     startNotifications () {
+      this.bt.device.onadvertisementreceived = (event) => {
+        this.ad = event
         console.log(event)
         console.log('Advertisement received.');
         console.log('  Device Name: ' + event.device.name);
@@ -96,15 +105,22 @@ export default {
           console.log('Service', [key, valueDataView]);
         });
       };
-
-      console.log('Watching advertisements from "' + this.bt.device.name + '"...');
       this.bt.device.watchAdvertisements(); 
-        console.log(this.bt)
-        
+      console.log('Watching advertisements from "' + this.bt.device.name + '"...');
+      
+    },
+    async getBatteryLevel() {
+      
         const services = await this.bt.getServices()
         await this.bt.getService(services[0].uuid)
         const chars = await this.bt.getCharacteristics()
         console.log(chars)
+        chars.forEach((char) => {
+          char.oncharacteristicvaluechanged = (val) => {
+            this.battery_level = val.target.value.getUint8(0)
+            console.log(`Battery percentage is ${val.target.value.getUint8(0)}`)
+          }
+        })
         console.log('SERVICES::',await this.bt.getCharacteristic(chars[0].uuid))
 
         const val = await this.bt.getValue()
