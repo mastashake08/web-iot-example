@@ -43,9 +43,7 @@ export default {
   methods: {
     async getUSBDevices () {
       const filters = {
-        filters: [
-        { services: ["heart_rate", "battery_level"] }
-      ]}
+        }
       this.usb = new USBManager()
       console.log("Devices::",await this.usb.requestDevice(filters))
     },
@@ -68,24 +66,46 @@ export default {
         this.bt = new BluetoothManager()
         this.btDevice = await this.bt.getDevices({
           acceptAllDevices: true,
-          // filters: [{
-          //   services: ['0000180f-0000-1000-8000-00805f9b34fb'],
-          // }],
-          optionalServices: ["0000180f-0000-1000-8000-00805f9b34fb"]
+          //  filters: [{
+          //    services: ["00002a00-0000-1000-8000-00805f9b34fb", "00002a19-0000-1000-8000-00805f9b34fb"],
+          //    name: 'Services',
+          //    namePrefix: 'WebIOT'
+          //  }],
+          // optionalServices: ["0000180f-0000-1000-8000-00805f9b34fb"]
         })
 
       await this.bt.connectToServer()
-       await this.getBatteryLevel()
+      await this.getBatteryLevel()
       } catch(e) {
         console.log(e.message)
       }
     },
     async getBatteryLevel() {
-        console.log(this.bt)
-        console.log('SERVICES', await this.bt.getServices())
-        await this.bt.getService('0000180f-0000-1000-8000-00805f9b34fb')
+       this.bt.device.onadvertisementreceived = (event) => {
+        console.log(event)
+        console.log('Advertisement received.');
+        console.log('  Device Name: ' + event.device.name);
+        console.log('  Device ID: ' + event.device.id);
+        console.log('  RSSI: ' + event.rssi);
+        console.log('  TX Power: ' + event.txPower);
+        console.log('  UUIDs: ' + event.uuids);
+        event.manufacturerData.forEach((valueDataView, key) => {
+          console.log('Manufacturer', [key, valueDataView]);
+        });
+        event.serviceData.forEach((valueDataView, key) => {
+          console.log('Service', [key, valueDataView]);
+        });
+      };
 
-        console.log('SERVICES::',await this.bt.getCharacteristic('00002a19-0000-1000-8000-00805f9b34fb'))
+      console.log('Watching advertisements from "' + this.bt.device.name + '"...');
+      this.bt.device.watchAdvertisements(); 
+        console.log(this.bt)
+        
+        const services = await this.bt.getServices()
+        await this.bt.getService(services[0].uuid)
+        const chars = await this.bt.getCharacteristics()
+        console.log(chars)
+        console.log('SERVICES::',await this.bt.getCharacteristic(chars[0].uuid))
 
         const val = await this.bt.getValue()
 
