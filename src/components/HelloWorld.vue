@@ -12,6 +12,26 @@
       Your device battery level = {{battery_level}}%
 
     </p>
+    <svg id="compass-svg" width="300" height="300">
+      <defs>
+        <filter id="f2" x="0" y="0" width="200%" height="200%">
+          <feOffset result="offOut" in="SourceGraphic" dx="20" dy="20" />
+          <feGaussianBlur result="blurOut" in="offOut" stdDeviation="10" />
+          <feBlend in="SourceGraphic" in2="blurOut" mode="normal" />
+        </filter>
+      </defs>
+      <circle id="main-circle" cx="150" cy="75" r="50" stroke="red" fill="transparent"/>
+      <circle id="compass-circle" :cx="x" :cy="y" r="4" fill="yellow" stroke="blue" filter="url(#f2)" v-if="x" > 
+        <animateTransform
+          attributeName="transform"
+          attributeType="XML"
+          type="scale"
+          values="1; 2; 1; 0; 1" 
+          repeatCount="indefinite"
+          additive="sum" />
+      </circle>
+    
+    </svg>
     <canvas id="compass" height="300" width="300"></canvas>
     
     <button @click="readNFC">Read NFC Data</button>
@@ -54,29 +74,30 @@ export default {
           timestamp: Date.now()
         }]],
         point: {},
-        pointSize: 4
+        pointSize: 4,
+        x: 150,
+        y: 25
+
     }
   },
   mounted () {
-    this.canvas = document.getElementById("compass");
-    this.ctx = this.canvas.getContext("2d");
+    // this.canvas = document.getElementById("compass");
+    // this.ctx = this.canvas.getContext("2d");
 
-    this.ctx.globalCompositeOperation = 'destination-over'
-    const radius = 50;
-    const center_x = 150;
-    const center_y = 150;
-     this.x = center_x + radius * Math.cos(0);
-    this.y = center_y + radius * Math.sin(0);
-    this.ctx.beginPath()
-    this.ctx.fill();
-    this.ctx.arc(150, 150, 50, 0, 2 * Math.PI);
+    // this.ctx.globalCompositeOperation = 'destination-over'
+    // const radius = 50;
+    // const center_x = 150;
+    // const center_y = 150;
+    // //this.x = center_x + radius * Math.cos(0);
+    // //this.y = center_y + radius * Math.sin(0);
+    // this.ctx.beginPath()
+    // this.ctx.fill();
+    // this.ctx.arc(150, 150, 50, 0, 2 * Math.PI);
 
     
-    this.point = this.ctx.arc(this.x, this.y, this.pointSize, 0,  2 * Math.PI);
-    this.ctx.save()
-    //this.ctx.fill()
-    
-    this.ctx.stroke();
+    // this.point = this.ctx.arc(this.x, this.y, this.pointSize, 0,  2 * Math.PI);
+  
+    // this.ctx.save()
   },
   methods: {
     async getUSBDevices () {
@@ -127,8 +148,10 @@ export default {
     },
      startNotifications () {
       this.bt.device.onadvertisementreceived = (event) => {
-        this.ctx.clearRect(0,0,300,300)
-        const font_size = "20px";
+      
+        //this.ctx.restore()
+        //this.ctx.clearRect(0,0,300,300)
+        //const font_size = "20px";
         const radius = 50;
         const center_x = 150;
         const center_y = 150;
@@ -166,20 +189,8 @@ export default {
         
         this.x = center_x + radius * Math.cos(-angle);
         this.y = center_y + radius * Math.sin(-angle);
-        this.ctx.beginPath()
-        this.ctx.arc(this.x, this.y, this.pointSize, 0,  2 * Math.PI);
-          //this.ctx.moveTo(this.x, this.y);
-        this.ctx.arc(150, 150, 50, 0, 2 * Math.PI);
-
-
-//this.ctx.fill()
-   
-        console.log('ctx',this.ctx)
-        this.ctx.font = font_size;
-        this.ctx.fillText(`${event.device.name} - ${dist.toFixed(0)} meters away`,this.x + 10,this.y);
-
-        this.ctx.stroke()
-        this.ctx.restore()
+  
+        
         event.manufacturerData.forEach((valueDataView, key) => {
           console.log('Manufacturer', [key, valueDataView]);
         });
