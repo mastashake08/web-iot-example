@@ -52,11 +52,21 @@
 
       </circle>     
     </svg>
-    <button @click="getDevices">Choose BT Device</button>
-    <button @click="startScan">Scan BT Devices</button>
-    <p v-if="ad.length > 0">
-      {{ ad }}
-    </p>
+    <div v-if="!scanning">
+    
+      <button @click="getDevices" >Choose BT Device</button>
+
+      <button @click="startScan">Scan BT Devices</button>
+    </div>
+    <button @click="stopScan" v-else>Stop Scan</button>
+    <button @click="toggleAds">{{!showAds ? 'Show Ads' : 'Hide Ads'}}</button>
+      <div v-if="showAds">
+        <li v-for="(device,index) in devices" :key="index" >
+        {{ device.entries }}
+      </li>
+      </div>
+      
+     
   </div>
 </template>
 
@@ -70,9 +80,12 @@ export default {
   data () {
     return {
       bt: {},
+      showAds: false,
       btDevice: null,
       battery_level: 0,
-      ad: [],
+      scanning: false,
+      known_devices: [],
+      devices: new Map(),
       deltas : [[{
           distance: 0,
           timestamp: Date.now()
@@ -92,6 +105,7 @@ export default {
         y: 100,
         dist: 0,
         options: {
+          name: "bluetooth-le-scan",
           acceptAllDevices: true,
           acceptAllAdvertisements: true,
           keepRepeatedDevices: true
@@ -107,39 +121,80 @@ export default {
   },
   mounted () {
     
-    this.bt = new BluetoothManager()
+    this.bt = new BluetoothManager(this.allAdsEvent.bind(this))
   },
   methods: {
-    startScan() {
-      console.log(this.bt)
-      this.bt.startLEScan(this.options, (event) => {
+    toggleAds() {
+      this.showAds = !this.showAds
+    },
+    allAdsEvent(event){
         const ad = {
           name: event.device.name,
           id: event.device.id,
           rssi: event.rssi,
           tx: event.txPower,
-          uuids: event.uuids
+          uuids: event.uuids,
+          value: event.target.value,
+          device: event.device,
+          serviceData: event.serviceData,
+          manufacturerData: event.manufacturerData
+
         }
-        this.ad.push(ad)
-        console.log('Advertisement received.');
-        console.log('  Device Name: ' + event.device.name);
-        console.log('  Device ID: ' + event.device.id);
-        console.log('  RSSI: ' + event.rssi);
-        console.log('  TX Power: ' + event.txPower);
-        console.log('  UUIDs: ' + event.uuids);
+        let val = this.devices.get(ad.id)
+        console.log('val', val)
+        const exists = this.devices.has(ad.id)
+        console.log(exists)
+        const newArr = []
+        newArr.push(ad)
+        console.table([ad.id, val,newArr])
+        if(exists) {
+          val.push(ad)
+          this.devices.set(ad.id, val)
+        } else {
+          this.devices.set(ad.id, newArr)
+        }
+        
         event.manufacturerData.forEach((valueDataView, key) => {
           console.log('Manufacturer', [key, valueDataView]);
         });
         event.serviceData.forEach((valueDataView, key) => {
           console.log('Service', [key, valueDataView]);
         });
+       
+    },
+    async startScan() {
+      if(this.devices.length > 0) {
+        this.devices.forEach((device) => {
+        try {
+        console.log(device[0].device)
+        device[0].device.watchingAdvertisements = true
+        } catch {
+          console.error('UH-OH LET US LOOOOOK::::', device)
+        }
       })
+      }
+      this.known_devices = await this.bt.getDevices(this.options)
+      console.log(this.devices)
+      await this.bt.startLEScan(this.options)
+      this.scanning = true
+    },
+    stopScan() {
+      this.devices.forEach((device) => {
+        try {
+        console.log(device[0].device)
+        device[0].watchingAdvertisements = false
+        } catch {
+          console.error('UH-OH LET US LOOOOOK::::', device)
+        }
+      })
+
+      this.scanning = false
     },
     async getDevices () {
       const options = this.options
       try {
-        this.btDevice = await this.bt.getDevices(options)
-
+        this.device = await this.bt.requestDevice(options)
+        
       await this.bt.connectToServer()
       this.startNotifications()
       try {
@@ -167,12 +222,6 @@ export default {
           uuids: event.uuids
         }
         this.ad.push(ad)
-        console.log('Advertisement received.');
-        console.log('  Device Name: ' + event.device.name);
-        console.log('  Device ID: ' + event.device.id);
-        console.log('  RSSI: ' + event.rssi);
-        console.log('  TX Power: ' + event.txPower);
-        console.log('  UUIDs: ' + event.uuids);
         
         this.deltas[0][0] = this.deltas[0][1]
         this.deltas[0][1] = this.deltas[1][0]
