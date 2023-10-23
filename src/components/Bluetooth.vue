@@ -12,7 +12,7 @@
       <p>
         Distance: ~{{ this.dist.toFixed(0) }} meters away
       </p>
-    <svg id="compass-svg" width="300" height="300">
+    <svg id="compass-svg" width="300" height="300" v-if="bt.device">
       <defs>
         <linearGradient id="cirlceGradient">
           <stop offset="10%" stop-color="red" />
@@ -277,6 +277,7 @@ a {
 
 svg {
   text-align: center;
+  animation: glow-enter 3s ease-in-out 1;
 }
 
 @keyframes glow-animate {
@@ -294,6 +295,14 @@ svg {
   }
 }
 
+@keyframes glow-enter {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
 #compass-circle {
   animation: glow-animate 5s ease-out infinite;
 }

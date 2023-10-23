@@ -2,14 +2,17 @@
   <div class="hello">
   
     <p>
-      Welcome to the Web IOT demo!
+      {{msg}}
     </p>
   </div>
 </template>
 
 <script>
 export default {
-  name: 'WebIOT'
+  name: 'WebIOT',
+  props: {
+    msg: String
+  }
 }
 </script>
 

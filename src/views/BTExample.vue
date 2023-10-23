@@ -1,7 +1,7 @@
 <template>
   <div class="bluetooth">
     <img alt="Vue logo" src="../assets/logo.png">
-    <Bluetooth msg="Welcome to Your Vue.js App"/>
+    <Bluetooth msg="Web Bluetooth Example"/>
   </div>
 </template>
 
