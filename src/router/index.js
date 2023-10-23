@@ -4,6 +4,7 @@ import Home from '../views/Home.vue'
 import BTExample from '../views/BTExample'
 import SerialExample from '../views/SerialExample'
 import NFCExample from '../views/NFCExample'
+import USBExample from '../views/USBExample'
 Vue.use(VueRouter)
 
 const routes = [
@@ -35,6 +36,14 @@ const routes = [
     // this generates a separate chunk (about.[hash].js) for this route
     // which is lazy-loaded when the route is visited.
     component: NFCExample
+  },
+  {
+    path: '/usb',
+    name: 'USB',
+    // route level code-splitting
+    // this generates a separate chunk (about.[hash].js) for this route
+    // which is lazy-loaded when the route is visited.
+    component: USBExample
   }
 ]
 

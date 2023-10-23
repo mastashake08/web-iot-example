@@ -1,6 +1,6 @@
 <template>
   <div class="home">
-    <HelloWorld msg="This is the WebIOT demo created by Mastashake!"/>
+    <HelloWorld :msg="msg"/>
   </div>
 </template>
 
@@ -11,6 +11,13 @@ export default {
   name: 'home-view',
   components: {
     HelloWorld
+  },
+  data() {
+    return {
+      msg: `This is the WebIOT demo created by Mastashake!
+      This web application is currently only available on Desktop Chrome and Android Mobile!
+      `
+    }
   }
 }
 </script>

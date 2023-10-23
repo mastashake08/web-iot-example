@@ -22,6 +22,7 @@ export default {
   methods: {
     async getUSBDevices () {
       const filters = {
+        filters: []
         }
       this.usb = new USBManager()
       console.log("Devices::",await this.usb.requestDevice(filters))

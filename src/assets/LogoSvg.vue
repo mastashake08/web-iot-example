@@ -26,7 +26,7 @@ export default {
 @keyframes glow-animate {
   0% {
     opacity: 1;
-    transform: rotate3d(1,1,1, 0deg);
+    transform: rotate3d(1,1,1, 0deg) scale(1,1);
     box-shadow: 5px 3px 3px #00cc63;
   }
   25% {
@@ -36,20 +36,20 @@ export default {
   }
   50% {
     opacity: .9;
-    transform: rotate3d(-1.01, 0.9, 1, 45deg);
+    transform: rotate3d(-1.01, 0.9, 1, 45deg) scale(1.1,1.1);
     box-shadow: 10px 3px 4px #200636;
   }
   
   
   75% {
     opacity: .75;
-    transform: rotate3d(-1.01, 0.9, 1, 30deg);
+    transform: rotate3d(-1.01, 0.9, 1, 30deg) scale(0.8,0.8);
 
   }
 
   90% {
     opacity: .8;
-    transform: rotate3d(-1.01, 0.9, 1, 15deg);
+    transform: rotate3d(-1.01, 0.9, 1, 15deg); 
 
   }
 
