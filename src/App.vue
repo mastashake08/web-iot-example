@@ -2,7 +2,9 @@
   <div id="app">
     <div id="nav">
       <router-link to="/">Home</router-link> |
-      <router-link to="/bluetooth">Bluetooth</router-link>
+      <router-link to="/bluetooth">Bluetooth</router-link> |
+      <router-link to="/serial">Serial</router-link> |
+      <router-link to="/nfc">NFC</router-link>
     </div>
     <router-view/>
   </div>

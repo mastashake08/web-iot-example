@@ -2,7 +2,7 @@
   <div class="hello">
     <h1>{{ msg }}</h1>
     <p>
-      {{nfcData}}
+      {{serial.selectedPort}}
     </p>
     <button @click="getPorts">Scan Serial Ports</button>
   </div>
@@ -11,22 +11,31 @@
 <script>
 import { SerialManager } from '@mastashake08/web-iot'
 export default {
-  name: 'serial-example',
   props: {
     msg: String
   },
   data () {
     return {
-      serial: {}
+      serial: {},
+      port: {}
     }
   },
   methods: {
+    async writeData() {
+      const encoder = new TextEncoder();
+      await this.serial.writeData(encoder.encode("PING"))
+    },
     async getPorts () {
       this.serial = new SerialManager()
-      console.log(await this.serial.requestPort())
-      console.log(await this.serial.openPort({
-        baudRate: 22000
-      }))
+      this.port = await this.serial.requestPort()
+      await this.serial.openPort({
+        baudRate: 9600
+      })
+      console.log(await this.port.getInfo())
+      console.log(await   this.port.getSignals())
+      console.log(await  this.port.setSignals({ dataTerminalReady: true }))
+      console.log(await   this.port.getSignals())
+      await this.writeData()
     }
   },
   computed: {
