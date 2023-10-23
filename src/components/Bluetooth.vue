@@ -141,12 +141,9 @@ export default {
 
         }
         let val = this.devices.get(ad.id)
-        console.log('val', val)
         const exists = this.devices.has(ad.id)
-        console.log(exists)
         const newArr = []
         newArr.push(ad)
-        console.table([ad.id, val,newArr])
         if(exists) {
           val.push(ad)
           this.devices.set(ad.id, val)
@@ -174,15 +171,13 @@ export default {
       })
       }
       this.known_devices = await this.bt.getDevices(this.options)
-      console.log(this.devices)
       await this.bt.startLEScan(this.options)
       this.scanning = true
     },
     stopScan() {
       this.devices.forEach((device) => {
         try {
-        console.log(device[0].device)
-        device[0].watchingAdvertisements = false
+          device[0].watchingAdvertisements = false
         } catch {
           console.error('UH-OH LET US LOOOOOK::::', device)
         }
@@ -219,9 +214,23 @@ export default {
           id: event.device.id,
           rssi: event.rssi,
           tx: event.txPower,
-          uuids: event.uuids
+          uuids: event.uuids,
+          value: event.target.value,
+          device: event.device,
+          serviceData: event.serviceData,
+          manufacturerData: event.manufacturerData
+
         }
-        this.ad.push(ad)
+        let val = this.devices.get(ad.id)
+        const exists = this.devices.has(ad.id)
+        const newArr = []
+        newArr.push(ad)
+        if(exists) {
+          val.push(ad)
+          this.devices.set(ad.id, val)
+        } else {
+          this.devices.set(ad.id, newArr)
+        }
         
         this.deltas[0][0] = this.deltas[0][1]
         this.deltas[0][1] = this.deltas[1][0]

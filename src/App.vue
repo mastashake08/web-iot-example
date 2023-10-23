@@ -6,6 +6,7 @@
       <router-link to="/serial">Serial</router-link> |
       <router-link to="/nfc">NFC</router-link>
     </div>
+    <logo-svg/>
     <router-view/>
   </div>
 </template>
