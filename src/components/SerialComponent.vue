@@ -23,11 +23,14 @@ export default {
   methods: {
     async writeData() {
       const encoder = new TextEncoder();
-      await this.serial.writeData(encoder.encode("PING"))
+      await this.serial.writeData(encoder.encode("AT*AGAD=020a04110701d7e9014ff344e7838fe226b9e15624,1"))
+      console.log(await this.serial.readData())
     },
     async getPorts () {
       this.serial = new SerialManager()
-      this.port = await this.serial.requestPort()
+      this.port = await this.serial.requestPort({
+  allowedBluetoothServiceClassIds: ['0000110f-0000-1000-8000-00805f9b34fb'],
+})
       await this.serial.openPort({
         baudRate: 9600
       })

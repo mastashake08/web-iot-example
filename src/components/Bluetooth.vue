@@ -62,7 +62,7 @@
     <button @click="toggleAds">{{!showAds ? 'Show Ads' : 'Hide Ads'}}</button>
       <div v-if="showAds">
         <li v-for="(device,index) in devices" :key="index" >
-        {{ device.entries }}
+        {{ device }} {{ index }}
       </li>
       </div>
       
@@ -302,6 +302,11 @@ export default {
       } else {
         return 'DEVICE NOT CONNECTED'
       }
+    },
+    ads () {
+      return this.devices.forEach((value,key) => {
+        console.log(`m[${key}] = ${value}`);
+      })
     }
 }
 }
