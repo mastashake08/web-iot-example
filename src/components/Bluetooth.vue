@@ -61,7 +61,7 @@
 </template>
 
 <script>
-import { BluetoothManager } from '@mastashake08/web-iot'
+import { BluetoothManager } from 'web-iot'
 export default {
   name: 'b-t',
   props: {
@@ -111,8 +111,8 @@ export default {
   },
   methods: {
     startScan() {
-      this.bt.bluetooth.requestLEScan(this.options)
-      this.bt.bluetooth.onadvertisementreceived = (event) => {
+      console.log(this.bt)
+      this.bt.startLEScan(this.options, (event) => {
         const ad = {
           name: event.device.name,
           id: event.device.id,
@@ -128,12 +128,12 @@ export default {
         console.log('  TX Power: ' + event.txPower);
         console.log('  UUIDs: ' + event.uuids);
         event.manufacturerData.forEach((valueDataView, key) => {
-          console.log('Manufacturer', [key, valueDataView.getUint8(0)]);
+          console.log('Manufacturer', [key, valueDataView]);
         });
         event.serviceData.forEach((valueDataView, key) => {
           console.log('Service', [key, valueDataView]);
         });
-      }
+      })
     },
     async getDevices () {
       const options = this.options
