@@ -9,7 +9,7 @@
 </template>
 
 <script>
-import { SerialManager } from 'web-iot'
+import { SerialManager } from '@mastashake08/web-iot'
 export default {
   name: 'serial-example',
   props: {

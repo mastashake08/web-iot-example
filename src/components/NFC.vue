@@ -9,7 +9,7 @@
 </template>
 
 <script>
-import { NFCManager } from 'web-iot'
+import { NFCManager } from '@mastashake08/web-iot'
 export default {
   name: 'NFC',
   props: {

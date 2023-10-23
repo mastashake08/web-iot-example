@@ -71,7 +71,7 @@
 </template>
 
 <script>
-import { BluetoothManager } from 'web-iot'
+import { BluetoothManager } from '@mastashake08/web-iot'
 export default {
   name: 'b-t',
   props: {

@@ -6,7 +6,7 @@
 </template>
 
 <script>
-import { USBManager } from 'web-iot'
+import { USBManager } from '@mastashake08/web-iot'
 export default {
   name: 'USB',
   props: {
