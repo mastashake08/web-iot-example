@@ -11,7 +11,7 @@
 <script>
 import { SerialManager } from '@mastashake08/web-iot'
 export default {
-  name: 'Serial',
+  name: 'serial-example',
   props: {
     msg: String
   },

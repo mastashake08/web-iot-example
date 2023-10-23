@@ -4,39 +4,66 @@
     <p>
       Your are connected to {{ (typeof bt.device !== 'undefined' && typeof bt.device.name !== 'undefined') ? bt.device.name  : 'NOT CONNECTED'   }}
     </p>
-    <p>
+    <p v-if="battery_level > 0">
 
       Your device battery level = {{battery_level}}%
 
     </p>
+      <p>
+        Distance: ~{{ this.dist.toFixed(0) }} meters away
+      </p>
     <svg id="compass-svg" width="300" height="300">
       <defs>
-        <filter id="f2" x="0" y="0" width="200%" height="200%">
-          <feOffset result="offOut" in="SourceGraphic" dx="20" dy="20" />
-          <feGaussianBlur result="blurOut" in="offOut" stdDeviation="10" />
-          <feBlend in="SourceGraphic" in2="blurOut" mode="normal" />
-        </filter>
+        <linearGradient id="cirlceGradient">
+          <stop offset="10%" stop-color="red" />
+          <stop offset="95%" stop-color="green" />
+        </linearGradient>
+        <filter id="glow">
+          <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+          <feMerge>
+              <feMergeNode in="coloredBlur"/>
+              <feMergeNode in="SourceGraphic"/>
+          </feMerge>
+      </filter>
+      <filter id="shadow" width="1.5" height="1.5" x="-.25" y="-.25">
+    <feGaussianBlur in="SourceAlpha" stdDeviation="2.5" result="blur"/>
+    <feColorMatrix result="bluralpha" type="matrix" values=
+            "1 0 0 0   0
+             0 1 0 0   0
+             0 0 1 0   0
+             0 0 0 0.4 0 "/>
+    <feOffset in="bluralpha" dx="3" dy="3" result="offsetBlur"/>
+    <feMerge>
+        <feMergeNode in="offsetBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+    </feMerge>
+</filter>
       </defs>
-      <circle id="main-circle" cx="150" cy="75" r="50" stroke="red" fill="transparent"/>
-      <circle id="compass-circle" :cx="x" :cy="y" r="4" fill="yellow" stroke="blue" filter="url(#f2)" v-if="x" > 
+      <path id="main-circle" stroke="gold" fill="transparent"  stroke-width="10px" style="filter:url(#shadow);" d="M100 150a50 50 0 1 0 100 0a50 50 0 1 0 -100 0" />
+      <circle id="compass-circle" :cx="x" :cy="y" r="10"  style="fill: transparent; stroke-width: 4; stroke: url(#cirlceGradient);"  >
         <animateTransform
           attributeName="transform"
           attributeType="XML"
-          type="scale"
-          values="1; 2; 1; 0; 1" 
-          repeatCount="indefinite"
-          additive="sum" />
-      </circle>
-    
+          type="rotate"
+          :from="`0 ${x} ${y}`"
+          :to="`360 ${x} ${y}`"
+          dur="3s"
+          repeatCount="indefinite" />
+
+      </circle>     
     </svg>
-    <button @click="getDevices">Scan BT Devices</button>
+    <button @click="getDevices">Choose BT Device</button>
+    <button @click="startScan">Scan BT Devices</button>
+    <p v-if="ad.length > 0">
+      {{ ad }}
+    </p>
   </div>
 </template>
 
 <script>
 import { BluetoothManager } from '@mastashake08/web-iot'
 export default {
-  name: 'Bluetooth',
+  name: 'b-t',
   props: {
     msg: String
   },
@@ -45,7 +72,7 @@ export default {
       bt: {},
       btDevice: null,
       battery_level: 0,
-      ad: {},
+      ad: [],
       deltas : [[{
           distance: 0,
           timestamp: Date.now()
@@ -62,27 +89,56 @@ export default {
         point: {},
         pointSize: 4,
         x: 150,
-        y: 25
-
-    }
-  },
-  mounted () {
- 
-  },
-  methods: {
-    async getDevices () {
-      try {
-        this.bt = new BluetoothManager()
-        this.btDevice = await this.bt.getDevices({
+        y: 100,
+        dist: 0,
+        options: {
           acceptAllDevices: true,
-          acceptAllAdvertisements: true
+          acceptAllAdvertisements: true,
+          keepRepeatedDevices: true
           //  filters: [{
           //    services: ["00002a00-0000-1000-8000-00805f9b34fb", "00002a19-0000-1000-8000-00805f9b34fb"],
           //    name: 'Services',
           //    namePrefix: 'WebIOT'
           //  }],
           // optionalServices: ["0000180f-0000-1000-8000-00805f9b34fb"]
-        })
+        }
+
+    }
+  },
+  mounted () {
+    
+    this.bt = new BluetoothManager()
+  },
+  methods: {
+    startScan() {
+      this.bt.bluetooth.requestLEScan(this.options)
+      this.bt.bluetooth.onadvertisementreceived = (event) => {
+        const ad = {
+          name: event.device.name,
+          id: event.device.id,
+          rssi: event.rssi,
+          tx: event.txPower,
+          uuids: event.uuids
+        }
+        this.ad.push(ad)
+        console.log('Advertisement received.');
+        console.log('  Device Name: ' + event.device.name);
+        console.log('  Device ID: ' + event.device.id);
+        console.log('  RSSI: ' + event.rssi);
+        console.log('  TX Power: ' + event.txPower);
+        console.log('  UUIDs: ' + event.uuids);
+        event.manufacturerData.forEach((valueDataView, key) => {
+          console.log('Manufacturer', [key, valueDataView.getUint8(0)]);
+        });
+        event.serviceData.forEach((valueDataView, key) => {
+          console.log('Service', [key, valueDataView]);
+        });
+      }
+    },
+    async getDevices () {
+      const options = this.options
+      try {
+        this.btDevice = await this.bt.getDevices(options)
 
       await this.bt.connectToServer()
       this.startNotifications()
@@ -97,16 +153,20 @@ export default {
       }
     },
      startNotifications () {
+
       this.bt.device.onadvertisementreceived = (event) => {
       
-        //this.ctx.restore()
-        //this.ctx.clearRect(0,0,300,300)
-        //const font_size = "20px";
         const radius = 50;
         const center_x = 150;
         const center_y = 150;
-        this.ad = event
-        console.log(event)
+        const ad = {
+          name: event.device.name,
+          id: event.device.id,
+          rssi: event.rssi,
+          tx: event.txPower,
+          uuids: event.uuids
+        }
+        this.ad.push(ad)
         console.log('Advertisement received.');
         console.log('  Device Name: ' + event.device.name);
         console.log('  Device ID: ' + event.device.id);
@@ -119,14 +179,13 @@ export default {
         this.deltas[1][0] = this.deltas[1][1]
         
         
-        const dist = 10**((event.txPower - event.rssi)/10**4)
-        console.log(dist)
+        this.dist = 10**((event.txPower - event.rssi)/10**4)
         const packet = {
-          distance: dist,
+          distance: this.dist,
           timestamp: event.timeStamp
         }
         this.deltas[1][1] = packet
-        console.log(this.deltas[1][1])
+        console.log(this.deltas)
         const x1 = this.deltas[0][0].distance
         const x2 = this.deltas[0][1].distance
         const y1 = this.deltas[1][0].distance
@@ -136,18 +195,32 @@ export default {
         const vX = (x2-x1)/(a0)
         const vY = (y2-y1)/(a1)
         const angle = Math.atan(vY/vX)
-        
-        this.x = center_x + radius * Math.cos(-angle);
+        if(!isNaN(angle)){
+          this.x = center_x + radius * Math.cos(-angle);
         this.y = center_y + radius * Math.sin(-angle);
   
-        
+        console.log([angle,this.x,this.y])
         event.manufacturerData.forEach((valueDataView, key) => {
           console.log('Manufacturer', [key, valueDataView]);
         });
         event.serviceData.forEach((valueDataView, key) => {
           console.log('Service', [key, valueDataView]);
         });
+        }
       };
+      this.deltas = [[{
+          distance: 0,
+          timestamp: Date.now()
+        },{
+          distance: 0,
+          timestamp: Date.now()
+        }],[{
+          distance: 0,
+          timestamp: Date.now()
+        },{
+          distance: 0,
+          timestamp: Date.now()
+        }]]
       this.bt.device.watchAdvertisements(); 
       console.log('Watching advertisements from "' + this.bt.device.name + '"...');
       
@@ -200,5 +273,28 @@ li {
 }
 a {
   color: #42b983;
+}
+
+svg {
+  text-align: center;
+}
+
+@keyframes glow-animate {
+  0% {
+    opacity:.25;
+  }
+  20% {
+    opacity: .75;
+  }
+  80% {
+    opacity: 1;
+  }
+  100% {
+    opacity: .25;
+  }
+}
+
+#compass-circle {
+  animation: glow-animate 5s ease-out infinite;
 }
 </style>

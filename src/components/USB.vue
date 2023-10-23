@@ -6,7 +6,7 @@
 </template>
 
 <script>
-import { NFCManager, BluetoothManager, SerialManager, USBManager } from '@mastashake08/web-iot'
+import { USBManager } from '@mastashake08/web-iot'
 export default {
   name: 'USB',
   props: {
