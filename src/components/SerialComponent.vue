@@ -5,6 +5,7 @@
       {{serial.selectedPort}}
     </p>
     <button @click="getPorts">Scan Serial Ports</button>
+    <button @click="writeData">Write Data</button>
   </div>
 </template>
 
@@ -22,24 +23,24 @@ export default {
   },
   methods: {
     async writeData() {
-      const encoder = new TextEncoder();
-      await this.serial.writeData(encoder.encode("AT*AGAD=020a04110701d7e9014ff344e7838fe226b9e15624,1"))
+      const encoder = new TextEncoder('utf-16');
+      const data = prompt('Enter data.')
+      await this.port.setSignals({ dataTerminalReady: true, requestToSend: true })
+      await this.serial.writeData(encoder.encode(data))
       console.log(await this.serial.readData())
     },
     async getPorts () {
       this.serial = new SerialManager()
       this.port = await this.serial.requestPort({
-  allowedBluetoothServiceClassIds: ['0000110f-0000-1000-8000-00805f9b34fb'],
-})
+        allowedBluetoothServiceClassIds: ['0000110f-0000-1000-8000-00805f9b34fb'],
+      })    
+     
       await this.serial.openPort({
-        baudRate: 9600
+        baudRate: prompt('Enter Baud rate.')
       })
-      console.log(await this.port.getInfo())
-      console.log(await   this.port.getSignals())
-      console.log(await  this.port.setSignals({ dataTerminalReady: true }))
-      console.log(await   this.port.getSignals())
-      await this.writeData()
-    }
+      await  this.port.setSignals({ dataTerminalReady: true, requestToSend: true })
+    },
+  
   },
   computed: {
    
